@@ -10,9 +10,9 @@
         "dependencies": {
           "Newtonsoft.Json": "13.0.1",
           "SharpZipLib": "1.3.3",
-          "RageCoop.Client": "1.5.2.121",
+          "RageCoop.Client": "1.5.12.15",
           "RageCoop.Core": "0.1.0.0",
-          "RageCoop.Server": "1.5.2.104"
+          "RageCoop.Server": "1.5.12.13"
         },
         "runtime": {
           "RageCoop.ResourceBuilder.dll": {}
@@ -34,11 +34,11 @@
           }
         }
       },
-      "RageCoop.Client/1.5.2.121": {
+      "RageCoop.Client/1.5.12.15": {
         "runtime": {
           "RageCoop.Client.dll": {
-            "assemblyVersion": "1.5.2.121",
-            "fileVersion": "1.5.2.121"
+            "assemblyVersion": "1.5.12.15",
+            "fileVersion": "1.5.12.15"
           }
         }
       },
@@ -50,19 +50,43 @@
           }
         }
       },
-      "RageCoop.Server/1.5.2.104": {
+      "RageCoop.Server/1.5.12.13": {
         "runtime": {
           "RageCoop.Server.dll": {
-            "assemblyVersion": "1.5.2.104",
-            "fileVersion": "1.5.2.104"
+            "assemblyVersion": "1.5.12.13",
+            "fileVersion": "1.5.12.13"
           }
         }
       },
-      "LemonUI.SHVDN3/1.7.0.0": {
+      "ScriptHookVDotNet3/3.7.0.188": {
         "runtime": {
-          "LemonUI.SHVDN3.dll": {
-            "assemblyVersion": "1.7.0.0",
-            "fileVersion": "1.7.0.0"
+          "ScriptHookVDotNet3.dll": {
+            "assemblyVersion": "3.7.0.188",
+            "fileVersion": "3.7.0.188"
+          }
+        }
+      },
+      "Lidgren.Network/2012.1.7.0": {
+        "runtime": {
+          "Lidgren.Network.dll": {
+            "assemblyVersion": "2012.1.7.0",
+            "fileVersion": "2012.1.7.0"
+          }
+        }
+      },
+      "ScriptHookVDotNet/3.7.0.188": {
+        "runtime": {
+          "ScriptHookVDotNet.dll": {
+            "assemblyVersion": "3.7.0.188",
+            "fileVersion": "3.6.0.0"
+          }
+        }
+      },
+      "McMaster.NETCore.Plugins/2.0.0.0": {
+        "runtime": {
+          "McMaster.NETCore.Plugins.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.0.0"
           }
         }
       }
@@ -88,7 +112,7 @@
       "path": "sharpziplib/1.3.3",
       "hashPath": "sharpziplib.1.3.3.nupkg.sha512"
     },
-    "RageCoop.Client/1.5.2.121": {
+    "RageCoop.Client/1.5.12.15": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -98,12 +122,27 @@
       "serviceable": false,
       "sha512": ""
     },
-    "RageCoop.Server/1.5.2.104": {
+    "RageCoop.Server/1.5.12.13": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "LemonUI.SHVDN3/1.7.0.0": {
+    "ScriptHookVDotNet3/3.7.0.188": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Lidgren.Network/2012.1.7.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ScriptHookVDotNet/3.7.0.188": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "McMaster.NETCore.Plugins/2.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

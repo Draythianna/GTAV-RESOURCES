@@ -934,5 +934,10 @@
             Kick spamming assholes
             </summary>
         </member>
+        <member name="P:RageCoop.Server.Settings.SpamLimit">
+            <summary>
+            Player that spawned entities more than this amount will be kicked if <see cref="P:RageCoop.Server.Settings.KickSpamming"/> is enabled.
+            </summary>
+        </member>
     </members>
 </doc>

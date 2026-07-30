@@ -1,4 +1,4 @@
-﻿using RageCoop.Server;
+using RageCoop.Server;
 
 namespace RageCoop.Resources.Race.Objects
 {
@@ -25,7 +25,7 @@ namespace RageCoop.Resources.Race.Objects
                 {
                     if (x.Client.Player.LastVehicle!=null)
                     {
-                        score-=x.Client.Player.LastVehicle.Position.DistanceTo(checkPoints[x.CheckpointsPassed])*0.000001;
+                        score-=x.Client.Player.LastVehicle.Position.DistanceTo(checkPoints[x.CheckpointsPassed].ToGTA())*0.000001;
                     }
                     else
                     {
