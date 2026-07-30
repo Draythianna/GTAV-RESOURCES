@@ -14,13 +14,13 @@
 
   <ItemGroup>
     <Reference Include="RageCoop.Client">
-      <HintPath>..\..\..\RAGECOOP-V\bin\Debug\Client\RageCoop.Client.dll</HintPath>
+      <HintPath>..\..\..\RageCOOP-V\bin\Release\Client\RageCoop.Client.dll</HintPath>
     </Reference>
     <Reference Include="RageCoop.Core">
-      <HintPath>..\..\..\RAGECOOP-V\bin\Debug\Core\RageCoop.Core.dll</HintPath>
+      <HintPath>..\..\..\RageCOOP-V\bin\Release\Core\RageCoop.Core.dll</HintPath>
     </Reference>
     <Reference Include="RageCoop.Server">
-      <HintPath>..\..\..\RAGECOOP-V\bin\Debug\Server\RageCoop.Server.dll</HintPath>
+      <HintPath>..\..\..\RageCOOP-V\bin\Release\Server\RageCoop.Server.dll</HintPath>
     </Reference>
   </ItemGroup>
 

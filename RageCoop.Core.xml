@@ -4,6 +4,12 @@
         <name>RageCoop.Core</name>
     </assembly>
     <members>
+        <member name="M:RageCoop.Core.CoreUtils.GetLocalAddress">
+            <summary>
+            Get local ip addresses on all network interfaces 
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:RageCoop.Core.Extensions.GetBytes(GTA.Math.Quaternion)">
             <summary>
             
@@ -128,6 +134,11 @@
         <member name="M:RageCoop.Core.CoopPeer.Dispose">
             <summary>
             Terminate all connections and background thread
+            </summary>
+        </member>
+        <member name="T:RageCoop.Core.ServerInfo">
+            <summary>
+            A json object representing a server's information as annouced to master server.
             </summary>
         </member>
         <member name="P:RageCoop.Core.Packets.HolePunch.Status">
