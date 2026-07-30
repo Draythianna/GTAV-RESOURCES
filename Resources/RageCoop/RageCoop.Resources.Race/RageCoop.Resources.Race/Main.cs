@@ -212,7 +212,7 @@ namespace RageCoop.Resources.Race
             {
                 try
                 {
-                    var cayo = Session.Map.SpawnPoints[0].Position.ToGTA().DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f;
+                    var cayo = Session.Map.SpawnPoints != null && Session.Map.SpawnPoints.Length > 0 && Session.Map.SpawnPoints[0].Position.ToGTA().DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f;
                     client.SendNativeCall((Hash)0x9A9D1BA639675CF1, "HeistIsland", cayo);
                     var position = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Position;
                     var heading = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Heading;
