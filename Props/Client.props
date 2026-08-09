@@ -1,17 +1,20 @@
 <Project>
-	<PropertyGroup>
-		<EnableDynamicLoading>true</EnableDynamicLoading>
-		<DebugType>embedded</DebugType>
-	</PropertyGroup>
+        <PropertyGroup>
+                <EnableDynamicLoading>true</EnableDynamicLoading>
+                <DebugType>embedded</DebugType>
+        </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScriptHookVDotNetCore">
       <HintPath>..\..\..\..\ScriptHookVDotNetCore.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="RageCoop.Client.Scripting">
       <HintPath>..\..\..\..\RageCoop.Client.Scripting.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="RageCoop.Core">
       <HintPath>..\..\..\..\RageCoop.Core.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
 </Project>

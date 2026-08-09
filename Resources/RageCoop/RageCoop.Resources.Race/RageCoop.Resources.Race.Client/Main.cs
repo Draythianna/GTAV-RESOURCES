@@ -1,4 +1,4 @@
-﻿using GTA;
+using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTA.UI;
@@ -51,7 +51,10 @@ namespace RageCoop.Resources.Race
             _settings = Settings.ReadSettings(Path.Combine(AppContext.BaseDirectory, CurrentResource.DataFolder, "Settings.json"));
 
             if (_settings.LoadMPMaps)
-                Function.Call(Hash.ON_ENTER_MP);
+            {
+                try { Function.Call(Hash.ON_ENTER_MP); }
+                catch { }
+            }
 
             Aborted += (e) => { if (e.IsUnloading) Cleanup(); };
         }
@@ -396,7 +399,7 @@ namespace RageCoop.Resources.Race
 
     public class Settings
     {
-        public bool LoadMPMaps { get; set; } = true;
+        public bool LoadMPMaps { get; set; } = false;
 
         public static Settings ReadSettings(string path)
         {

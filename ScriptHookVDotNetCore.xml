@@ -79,19 +79,21 @@
             <param name="fileName"></param>
             <returns></returns>
         </member>
+        <member name="M:SHVDN.Core.GetPtr(System.String)">
+            <summary>
+            Get a pointer value by key from the native ASI store.
+            Marshals the managed string to UTF-8 bytes before passing to native code.
+            </summary>
+        </member>
+        <member name="M:SHVDN.Core.SetPtr(System.String,System.IntPtr)">
+            <summary>
+            Set a pointer value by key in the native ASI store.
+            Marshals the managed string to UTF-8 bytes before passing to native code.
+            </summary>
+        </member>
         <member name="T:SHVDN.Console">
             <summary>
             SHVDN.Console implementations
-            </summary>
-        </member>
-        <member name="P:SHVDN.Console.IsOpen">
-            <summary>
-            Gets or sets whether the console is open.
-            </summary>
-        </member>
-        <member name="P:SHVDN.Console.CommandHistory">
-            <summary>
-            Gets or sets the command history. This is used to avoid losing the command history on SHVDN reloading.
             </summary>
         </member>
         <member name="M:SHVDN.Console.RegisterCommand(,System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
@@ -104,9 +106,27 @@
             <param name="help"></param>
             <param name="assembly"></param>
         </member>
+        <member name="M:SHVDN.Console.RegisterCommandManaged(System.String,System.Reflection.MethodInfo,System.Object)">
+            <summary>
+            Register a managed console command
+            </summary>
+            <param name="help"></param>
+            <param name="method"></param>
+            <param name="target"></param>
+        </member>
         <member name="M:SHVDN.Console.UnregisterCommand(System.String)">
             <summary>
             Unregister all methods with a <see cref="T:SHVDN.Console.Command"/> attribute that were previously registered.
+            </summary>
+        </member>
+        <member name="P:SHVDN.Console.IsOpen">
+            <summary>
+            Gets or sets whether the console is open.
+            </summary>
+        </member>
+        <member name="P:SHVDN.Console.CommandHistory">
+            <summary>
+            Gets or sets the command history. This is used to avoid losing the command history on SHVDN reloading.
             </summary>
         </member>
         <member name="M:SHVDN.Console.AddToInput(System.ReadOnlySpan{System.Char})">
@@ -192,6 +212,13 @@
             <summary>
             32-bit bool for interop
             </summary>
+        </member>
+        <member name="M:SHVDN.Globals.Assert(System.Boolean,System.String)">
+            <summary>
+            Assert a condition, both in Debug and Release build
+            </summary>
+            <param name="condition"></param>
+            <param name="msg"></param>
         </member>
         <member name="T:SHVDN.Marshaller">
             <summary>
@@ -1043,6 +1070,32 @@
             The plugin loader
             </summary>
         </member>
+        <member name="T:SHVDN.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:SHVDN.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:SHVDN.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:SHVDN.Properties.Resources.Microsoft_CodeAnalysis">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
+        <member name="P:SHVDN.Properties.Resources.Microsoft_CodeAnalysis_CSharp">
+            <summary>
+              Looks up a localized resource of type System.Byte[].
+            </summary>
+        </member>
         <member name="T:SHVDN.UnmanagedArray`1">
             <summary>
             Simple struct that holds information of an array allocated on the heap or given address
@@ -1154,12 +1207,6 @@
             </summary>
             <param name="msg">The composite format string.</param>
             <param name="args">The formatting arguments.</param>
-        </member>
-        <member name="T:GTA.Native.ReversedNativeCallTask">
-            <summary>
-            Push arguments that are placed in reverse order. <see cref="F:GTA.Native.ReversedNativeCallTask.PtrArgLast"/> points to the last argument 
-            </summary>
-            <remarks>Example memory layout: [arg2][arg1][arg0], <see cref="F:GTA.Native.ReversedNativeCallTask.PtrArgLast"/> points to arg2</remarks>
         </member>
         <member name="M:GTA.Native.Function.PushString(System.ReadOnlySpan{System.Char})">
             <summary>
