@@ -10,7 +10,7 @@
         "dependencies": {
           "Newtonsoft.Json": "13.0.1",
           "SharpZipLib": "1.3.3",
-          "RageCoop.Client": "1.5.4.8",
+          "RageCoop.Client": "1.5.4.7",
           "RageCoop.Core": "0.1.0.0",
           "RageCoop.Server": "1.5.4.5"
         },
@@ -34,11 +34,11 @@
           }
         }
       },
-      "RageCoop.Client/1.5.4.8": {
+      "RageCoop.Client/1.5.4.7": {
         "runtime": {
           "RageCoop.Client.dll": {
-            "assemblyVersion": "1.5.4.8",
-            "fileVersion": "1.5.4.8"
+            "assemblyVersion": "1.5.4.7",
+            "fileVersion": "1.5.4.7"
           }
         }
       },
@@ -112,7 +112,7 @@
       "path": "sharpziplib/1.3.3",
       "hashPath": "sharpziplib.1.3.3.nupkg.sha512"
     },
-    "RageCoop.Client/1.5.4.8": {
+    "RageCoop.Client/1.5.4.7": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

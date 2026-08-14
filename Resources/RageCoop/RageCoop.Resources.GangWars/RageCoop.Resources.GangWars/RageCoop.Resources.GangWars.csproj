@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -21,10 +21,10 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="RageCoop.Core">
-	    <HintPath>..\..\..\..\RageCoop.Core.dll</HintPath>
+	    <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll</HintPath>
 	  </Reference>
 	  <Reference Include="RageCoop.Server">
-	    <HintPath>..\..\..\..\RageCoop.Server.dll</HintPath>
+	    <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Server\RageCoop.Server.dll</HintPath>
 	  </Reference>
 	  <Reference Include="ScriptHookVDotNet">
 	    <HintPath>..\..\..\..\ScriptHookVDotNet.dll</HintPath>
