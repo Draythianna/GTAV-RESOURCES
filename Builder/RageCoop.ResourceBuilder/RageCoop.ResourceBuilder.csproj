@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutDir>..\..\</OutDir>
@@ -18,19 +18,19 @@
 		  <HintPath>..\..\..\RAGECOOP-V\libs\LemonUI.SHVDNC.dll</HintPath>
 		</Reference>
 		<Reference Include="Lidgren.Network">
-		  <HintPath>..\..\..\RAGECOOP-V\bin\API\Lidgren.Network.dll</HintPath>
+		  <HintPath>..\..\..\RAGECOOP-V\bin\Release\Server\Lidgren.Network.dll</HintPath>
 		</Reference>
 		<Reference Include="RageCoop.Client.Scripting">
-		  <HintPath>..\..\..\RAGECOOP-V\bin\API\RageCoop.Client.Scripting.dll</HintPath>
+		  <HintPath>..\..\..\RAGECOOP-V\bin\Release\Client\Scripts\RageCoop.Client.Scripting.dll</HintPath>
 		</Reference>
 		<Reference Include="RageCoop.Core">
-			<HintPath>..\..\..\RAGECOOP-V\bin\API\RageCoop.Core.dll</HintPath>
+			<HintPath>..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll</HintPath>
 		</Reference>
 		<Reference Include="RageCoop.Server">
-			<HintPath>..\..\..\RAGECOOP-V\bin\API\RageCoop.Server.dll</HintPath>
+			<HintPath>..\..\..\RAGECOOP-V\bin\Release\Server\RageCoop.Server.dll</HintPath>
 		</Reference>
 		<Reference Include="ScriptHookVDotNetCore">
-		  <HintPath>..\..\..\RAGECOOP-V\bin\API\ScriptHookVDotNetCore.dll</HintPath>
+		  <HintPath>..\..\..\ScriptHookVDotNetCore\bin\Release\ScriptHookVDotNetCore.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

@@ -1,419 +1,351 @@
-using GTA;
+using System.Xml.Serialization;
 using GTA.Math;
 using GTA.Native;
-using GTA.UI;
-using RageCoop.Core.Scripting;
-using RageCoop.Client.Scripting;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
-using API = RageCoop.Client.Scripting.APIBridge;
-using Newtonsoft.Json;
+using RageCoop.Server;
+using RageCoop.Server.Scripting;
+using RageCoop.Resources.Race.Objects;
+using LiteDB;
 
 namespace RageCoop.Resources.Race
 {
-    public class Main : ClientScript
+    public class Main : ServerScript
     {
-        private int _countdown = -1;
-        private Sprite _fadeoutSprite;
-        private readonly List<Vector3> _checkpoints = new List<Vector3>();
-        private Blip _nextBlip = null;
-        private Blip _secondBlip = null;
-        private uint _raceStart;
-        private uint _seconds;
-        private int _lasttime = Environment.TickCount;
-        private bool _isInRace = false;
-        private Vector3? _lastCheckPoint;
-        private Vehicle _vehicle;
-        private int _vehicleHash;
-        private byte _primaryColor;
-        private byte _secondaryColor;
-        private int _cheating = 0;
-        private int _playerCount = 0;
-        private int _rankingPotition = 0;
-        private Settings _settings;
-        private float _lastSpeed = 0;
+        private static List<Map> Maps;
+        private static readonly Session Session = new();
+        private readonly List<object> Checkpoints = new();
 
-        protected override void OnStart()
+        private readonly XmlSerializer Serializer = new(typeof(Map));
+        private static readonly Random Random = new();
+        private static LiteDatabase DB;
+        private static ILiteCollection<Record> Records;
+        private Thread RankingThread;
+        private static bool Stopping = false; 
+
+        public override void OnStart()
         {
-            Notification.Show("Race resource loaded");
-
-            API.RegisterCustomEventHandler(Events.CountDown, CountDown);
-            API.RegisterCustomEventHandler(Events.StartCheckpointSequence, Checkpoints);
-            API.RegisterCustomEventHandler(Events.JoinRace, JoinRace);
-            API.RegisterCustomEventHandler(Events.LeaveRace, LeaveRace);
-            API.RegisterCustomEventHandler(Events.PositionRanking, (e) => { _rankingPotition = (ushort)e.Args[0]; _playerCount = (ushort)e.Args[1]; });
-
-            _settings = Settings.ReadSettings(Path.Combine(AppContext.BaseDirectory, CurrentResource.DataFolder, "Settings.json"));
-
-            if (_settings.LoadMPMaps)
+            API.Events.OnPlayerReady += (s, c) =>
             {
-                try { Function.Call(Hash.ON_ENTER_MP); }
-                catch { }
-            }
+                if (Session.State != State.Voting && Session.State != State.Preparing)
+                    c.SendChatMessage("A race has already started, wait for the next round or use /join to join the race");
+                else
+                    c.SendChatMessage("The race will start soon, use /vote to vote for a map");
+            };
+            API.Events.OnPlayerDisconnected += (s, c) =>
+            {
+                Leave(c, true);
+            };
+            API.Events.OnPlayerUpdate += OnPlayerUpdate;
 
-            Aborted += (e) => { if (e.IsUnloading) Cleanup(); };
+            API.RegisterCommands(this);
+            API.RegisterCustomEventHandler(Events.CheckpointPassed, CheckpointPassed);
+            API.RegisterCustomEventHandler(Events.Cheating, Cheating);
+
+            Session.State = State.Voting;
+            Session.Votes = new Dictionary<Client, string>();
+            Session.Players = new List<Player>();
+            if (GetMaps().Length== 0)
+            {
+                Logger.Warning("No maps found, applying default maps");
+                foreach(var file in CurrentResource.Files.Values)
+                {
+                    if (file.Name.StartsWith("Maps") && file.Name.EndsWith(".xml") && !file.IsDirectory)
+                    {
+                        var target = File.Create(Path.Combine(CurrentResource.DataFolder,file.Name));
+                        file.GetStream().CopyTo(target);
+                        target.Close();
+                        target.Dispose();
+                    }
+                }
+            }
+            Maps = GetMaps()?.Select(map => (Map)Serializer.Deserialize(new StreamReader(map))).ToList();
+
+            if (File.Exists(Path.Combine(CurrentResource.DataFolder, "times.db")))
+            {
+                Logger.Warning("times.db is outdated, please convert it to new database format using the converter");
+            }
+            DB = new LiteDatabase(@$"Filename={Path.Combine(CurrentResource.DataFolder, "Records.db")}; Connection=Shared;");
+            Records = DB.GetCollection<Record>();
+
+            RankingThread = new Thread(() =>
+            {
+                while (!Stopping)
+                {
+                    try
+                    {
+                        if (Session.State==State.Started)
+                        {
+                            Session.Rank();
+                            foreach (var p in Session.Players)
+                            {
+                                p.Client.SendCustomEvent(Events.PositionRanking, p.Ranking,(ushort)Session.Players.Count);
+                            }
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        CurrentResource.Logger.Error(ex);
+                    }
+                    Thread.Sleep(500);
+                }
+            });
+            RankingThread.Start();
+
+            CurrentResource.Logger.Info("Race resource started");
         }
 
-        protected override void OnTick()
+        public override void OnStop()
         {
-            base.OnTick();
-            var _player = Game.Player.Character;
+            Stopping=true;
+            DB.Dispose();
+            RankingThread.Join();
+            CurrentResource.Logger.Info($"Race resource stopped");
+        }
 
-            if (Environment.TickCount >= _lasttime + 1000)
+        private void OnPlayerUpdate(object s, Client c)
+        {
+            if (Session.State == State.Voting)
             {
-                _seconds++;
-                _lasttime = Environment.TickCount;
+                Session.NextEvent = DateTime.Now.AddSeconds(15);
+                Session.State = State.Preparing;
+                Session.Votes = new Dictionary<Client, string>();
+                lock (Session.Players)
+                    foreach (var player in Session.Players)
+                        player.CheckpointsPassed = 0;
+                API.SendChatMessage("Starting in 15 seconds, use /vote to vote for a map", null, "Server", false);
+            }
 
-                var veh = _player.CurrentVehicle;
-                if (veh != null && _isInRace)
+            if (Session.State == State.Preparing && DateTime.Now > Session.NextEvent)
+            {
+                Session.State = State.Starting;
+
+                foreach (var prop in API.Entities.GetAllProps())
+                    prop.Delete();
+                foreach (var vehicle in API.Entities.GetAllVehicles())
+                    vehicle.Delete();
+
+                var map = Session.Votes.GroupBy(x => x.Value).OrderByDescending(vote => vote.Count()).FirstOrDefault()?.Key ?? GetRandomMap();
+                Session.Map = Maps.First(x => x.Name == map);
+                API.SendChatMessage("Map: " + map);
+                var record = GetRecord(map);
+                if (record!=null)
+                    API.SendChatMessage($"Record: {TimeSpan.FromMilliseconds(record.Time):m\\:ss\\.ff} by {record.Player}");
+
+                foreach (var prop in Session.Map.DecorativeProps)
                 {
-                    if (veh.HeightAboveGround > 3f && !veh.IsInAir && !veh.IsInWater && veh.Speed == 0f)
+                    var p = API.Entities.CreateProp(prop.Hash, prop.Position, prop.Rotation);
+                    if (prop.Texture > 0 && prop.Texture < 16)
+                        API.SendNativeCall(null, Hash.SET_OBJECT_TINT_INDEX, p.Handle, prop.Texture);
+                }
+
+                Checkpoints.Clear();
+                foreach (var checkpoint in Session.Map.Checkpoints)
+                    Checkpoints.Add(checkpoint);
+
+                int spawnPoint = 0;
+                foreach (var client in API.GetAllClients())
+                {
+                    Join(client.Value, spawnPoint);
+                    spawnPoint++;
+                }
+
+                API.SendChatMessage("The race is about to start, get ready", null, "Server", false);
+
+                Task.Run(() =>
+                {
+                    Thread.Sleep(10000);
+
+                    API.SendCustomEvent(null, Events.CountDown);
+                    Thread.Sleep(3000);
+
+                    lock (Session.Players)
+                        foreach (var player in Session.Players)
+                            player.Client.Player.LastVehicle.Freeze(false);
+
+                    Session.State = State.Started;
+                    Session.RaceStart = Environment.TickCount64;
+                });
+            }
+        }
+
+        public void CheckpointPassed(CustomEventReceivedArgs obj)
+        {
+            if (Session.State == State.Started)
+            {
+                Player player;
+                lock (Session.Players)
+                    player = Session.Players.FirstOrDefault(x => x.Client == obj.Client);
+                if (player != null)
+                {
+                    player.CheckpointsPassed = Session.Map.Checkpoints.Length - (int)obj.Args[0];
+                    if (player.CheckpointsPassed == Session.Map.Checkpoints.Length)
                     {
-                        _cheating++;
-                        if (_cheating > 2)
-                            API.SendCustomEvent(Events.Cheating);
+                        Session.State = State.Voting;
+
+                        var time = Environment.TickCount64 - Session.RaceStart;
+                        var msg = $"{player.Client.Username} finished in {TimeSpan.FromMilliseconds(time):m\\:ss\\.ff}";
+                        var record = GetRecord(Session.Map.Name);
+                        if (record != null && time < record.Time)
+                            msg += " (new record)";
+                        if (Session.Players.Count > 1)
+                            msg += $" ({Wins(player.Client.Username) + 1} wins)";
+                        API.SendChatMessage(msg);
+                        SaveTime(Session.Map.Name, player.Client.Username, time, Session.Players.Count > 1 );
+                    }
+                }
+            }
+        }
+
+        public void Join(Client client, int spawnPoint)
+        {
+            Player player;
+            lock (Session.Players)
+            {
+                player = Session.Players.FirstOrDefault(x => x.Client == client);
+                if (player == null)
+                {
+                    player = new Player(client);
+                    Session.Players.Add(player);
+                }
+            }
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var cayo = Session.Map.SpawnPoints != null && Session.Map.SpawnPoints.Length > 0 && Session.Map.SpawnPoints[0].Position.DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f;
+                    client.SendNativeCall((Hash)0x9A9D1BA639675CF1, "HeistIsland", cayo);
+                    var position = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Position;
+                    var heading = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Heading;
+                    client.Player.Position = position + new Vector3(4, 0, 1);
+                    player.VehicleHash = (int)Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)];
+                    var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, position, heading);
+                    Thread.Sleep(1000);
+                    client.SendNativeCall(Hash.SET_PED_INTO_VEHICLE, client.Player.Handle, vehicle.Handle, -1);
+                    client.SendNativeCall((Hash)0xB96B00E976BE977F, cayo);
+                    client.SendCustomEvent(Events.StartCheckpointSequence, Checkpoints.ToArray());
+                    if (Session.State == State.Started)
+                    {
+                        client.SendCustomEvent(Events.JoinRace);
+                        API.SendChatMessage($"{client.Username} joined the race");
                     }
                     else
-                        _cheating = 0;
-
-                    if (veh.Speed - _lastSpeed > 15f && veh.Speed > 30f && !veh.HasRocketBoost && !veh.IsAircraft)
-                        API.SendCustomEvent(Events.Cheating);
-                    _lastSpeed = veh.Speed;
+                        vehicle.Freeze(true);
                 }
-            }
-
-            var res = ResolutionMaintainRatio;
-            if (_countdown > -1 && _countdown <= 3)
-            {
-                new LemonUI.Elements.ScaledText(new Point((int)res.Width / 2, 260 * 1080 / 720), _countdown == 0 ? "GO" : _countdown.ToString())
+                catch(Exception ex)
                 {
-                    Alignment = Alignment.Center,
-                    Scale = 2f,
-                    Font = GTA.UI.Font.Pricedown,
-                    Color = Color.White
-                }.Draw();
-                if (_fadeoutSprite?.Color.A > 2)
-                {
-                    _fadeoutSprite.Color = Color.FromArgb(_fadeoutSprite.Color.A - 2, _fadeoutSprite.Color.R, _fadeoutSprite.Color.G, _fadeoutSprite.Color.B);
-                    _fadeoutSprite.Draw();
+                    Logger.Error("[Race.Join]", ex);
                 }
-            }
-
-            var safe = SafezoneBounds;
-            if (_isInRace)
-            {
-                new LemonUI.Elements.ScaledText(new Point((int)res.Width - safe.X - 180, (int)res.Height - safe.Y - 135), "Time")
-                {
-                    Scale = 0.3f,
-                    Color = Color.White
-                }.Draw();
-                new LemonUI.Elements.ScaledText(new Point((int)res.Width - safe.X - 20, (int)res.Height - safe.Y - 147), FormatTime(_seconds - _raceStart))
-                {
-                    Alignment = Alignment.Right,
-                    Scale = 0.5f,
-                    Font = GTA.UI.Font.ChaletLondon,
-                    Color = Color.White
-                }.Draw();
-                new Sprite("timerbars", "all_black_bg", new Size(150, 26), new Point((int)Screen.Width - safe.X - 145, (int)Screen.Height - safe.Y - 92), Color.FromArgb(200, 255, 255, 255)).Draw();
-
-                if (_playerCount > 1)
-                {
-                    new LemonUI.Elements.ScaledText(new Point((int)res.Width - safe.X - 180, (int)res.Height - safe.Y - 180), "Position")
-                    {
-                        Scale = 0.3f,
-                        Color = Color.White
-                    }.Draw();
-                    new LemonUI.Elements.ScaledText(new Point((int)res.Width - safe.X - 20, (int)res.Height - safe.Y - 192), $"{_rankingPotition}/{_playerCount}")
-                    {
-                        Alignment = Alignment.Right,
-                        Scale = 0.5f,
-                        Font = GTA.UI.Font.ChaletLondon,
-                        Color = Color.White
-                    }.Draw();
-                    new Sprite("timerbars", "all_black_bg", new Size(150, 26), new Point((int)Screen.Width - safe.X - 145, (int)Screen.Height - safe.Y - 122), Color.FromArgb(200, 255, 255, 255)).Draw();
-                }
-            }
-
-            if (_checkpoints.Count > 0)
-            {
-                World.DrawMarker(MarkerType.VerticalCylinder, _checkpoints[0], new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(10f, 10f, 2f), Color.FromArgb(100, 241, 247, 57));
-                if (_nextBlip == null)
-                {
-                    _nextBlip = World.CreateBlip(_checkpoints[0]);
-                    _nextBlip.ShowRoute = true;
-                }
-
-                if (_checkpoints.Count > 1)
-                {
-                    if (_secondBlip == null)
-                    {
-                        _secondBlip = World.CreateBlip(_checkpoints[1]);
-                        _secondBlip.Scale = 0.5f;
-                        if (_checkpoints.Count == 2)
-                            _secondBlip.Sprite = BlipSprite.RaceFinish;
-                    }
-                    Vector3 dir = _checkpoints[1] - _checkpoints[0];
-                    dir.Normalize();
-                    World.DrawMarker(MarkerType.ChevronUpx1, _checkpoints[0] + new Vector3(0f, 0f, 2f), dir, new Vector3(60f, 0f, 0f), new Vector3(4f, 4f, 4f), Color.FromArgb(200, 87, 193, 250));
-                }
-                else
-                {
-                    Vector3 dir = _player.Position - _checkpoints[0];
-                    dir.Normalize();
-                    World.DrawMarker(MarkerType.CheckeredFlagRect, _checkpoints[0] + new Vector3(0f, 0f, 2f), dir, new Vector3(0f, 0f, 0f), new Vector3(4f, 4f, 4f), Color.FromArgb(200, 87, 193, 250));
-                    _nextBlip.Sprite = BlipSprite.RaceFinish;
-                }
-
-                if (_isInRace && _vehicle != null && _player.IsInVehicle(_vehicle) && _player.IsInRange(_checkpoints[0], 10f))
-                {
-                    Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "HUD_MINI_GAME_SOUNDSET", true);
-                    Function.Call(Hash.PLAY_SOUND_FRONTEND, 0, "CHECKPOINT_NORMAL", "HUD_MINI_GAME_SOUNDSET");
-                    _lastCheckPoint = _checkpoints[0];
-                    _checkpoints.RemoveAt(0);
-                    API.SendCustomEvent(Events.CheckpointPassed, _checkpoints.Count);
-                    ClearBlips();
-                    if (_checkpoints.Count == 0)
-                        _isInRace = false;
-                }
-            }
-
-            Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, (int)Control.VehicleCinCam);
-            Function.Call(Hash.SET_PED_CAN_BE_KNOCKED_OFF_VEHICLE, _player, 1); // don't fall from bike
-            Function.Call(Hash.SET_PED_CONFIG_FLAG, _player, 32, false); // don't fly through windshield
-            Function.Call(Hash.SET_MINIMAP_HIDE_FOW, true);
-            if (_player.Position.DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f &&
-                Function.Call<int>(Hash.GET_INTERIOR_FROM_ENTITY, _player) == 0)
-            {
-                Function.Call(Hash.SET_RADAR_AS_EXTERIOR_THIS_FRAME);
-                Function.Call(Hash.SET_RADAR_AS_INTERIOR_THIS_FRAME, 0xc0a90510, 4700f, -5145f, 0, 0);
-            }
+            });
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        public void Leave(Client client, bool disconnected)
         {
-            base.OnKeyDown(e);
+            if (Session.Votes.ContainsKey(client))
+                Session.Votes.Remove(client);
 
-            if (API.IsChatFocused)
+            Player player;
+            lock (Session.Players)
+                player = Session.Players.FirstOrDefault(x => x.Client == client);
+            if (player != null)
+            {
+                if (!disconnected)
+                {
+                    player.Client.Player.LastVehicle.Delete();
+                    client.SendCustomEvent(Events.LeaveRace);
+                    API.SendChatMessage($"{client.Username} left the race");
+                }
+
+                lock (Session.Players)
+                    Session.Players.Remove(player);
+            }
+
+            lock (Session.Players)
+                if (!Session.Players.Any())
+                    Session.State = State.Voting;
+        }
+
+        public void Cheating(CustomEventReceivedArgs obj)
+        {
+            API.SendChatMessage($"{obj.Client.Username} is cheating", null, "Server", false);
+            //obj.Client.Kick("Cheating");
+        }
+
+        [Command("vote")]
+        public void Vote(CommandContext ctx)
+        {
+            if (Session.State != State.Voting && Session.State != State.Preparing) return;
+
+            if (ctx.Args.Length == 0)
+            {
+                ctx.Client.SendChatMessage("Use /vote (map), Maps: " + string.Join(", ", Maps.Select(x => x.Name)));
                 return;
-            if (Game.IsControlJustPressed(Control.VehicleCinCam))
-                Respawn();
-        }
+            }
 
-        private void Respawn()
-        {
-            if (!_isInRace || _checkpoints.Count == 0 || !_lastCheckPoint.HasValue)
+            if (Session.Votes.ContainsKey(ctx.Client))
+            {
+                ctx.Client.SendChatMessage("You already voted for this round");
                 return;
-            Screen.FadeOut(1000);
-            Task.Run(() =>
+            }
+
+            var voted = Maps.FirstOrDefault(x => x.Name.ToLower() == string.Join(" ", ctx.Args.ToArray()).ToLower());
+            if (voted == null)
             {
-                Thread.Sleep(1000);
-                QueueAction(() =>
-                {
-                    var dir = _checkpoints[0] - _lastCheckPoint.Value;
-                    var heading = (float)(-Math.Atan2(dir.X, dir.Y) * 180.0 / Math.PI);
-
-                    // Stromberg will have some issues event after repair, so just spawn a new vehicle
-                    var radio = Game.RadioStation;
-                    _vehicle?.Delete();
-                    var model = new Model(_vehicleHash);
-                    model.Request(1000);
-                    _vehicle = World.CreateVehicle(model, _lastCheckPoint.Value, heading);
-                    model.MarkAsNoLongerNeeded();
-                    if (_vehicle == null)
-                    {
-                        Screen.FadeIn(1000);
-                        return false;
-                    }
-                    Function.Call(Hash.SET_VEHICLE_COLOURS, _vehicle, _primaryColor, _secondaryColor);
-                    _vehicle.PlaceOnGround();
-                    Game.Player.Character.SetIntoVehicle(_vehicle, VehicleSeat.Driver);
-                    Game.RadioStation = radio;
-                    Screen.FadeIn(1000);
-                    return true;
-                });
-            });
-        }
-
-        private void CountDown(CustomEventReceivedArgs obj)
-        {
-            Task.Run(() =>
-            {
-                for (_countdown = 3; _countdown >= 0; _countdown--)
-                {
-                    QueueAction(() =>
-                    {
-                        var w = Convert.ToInt32(Screen.Width / 2);
-                        _fadeoutSprite = new Sprite("mpinventory", "in_world_circle", new SizeF(200, 200), new PointF(w - 100, 200), _countdown == 0 ? Color.FromArgb(150, 49, 235, 126) : Color.FromArgb(150, 241, 247, 57));
-                        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "HUD_MINI_GAME_SOUNDSET", true);
-                        Function.Call(Hash.PLAY_SOUND_FRONTEND, 0, "CHECKPOINT_NORMAL", "HUD_MINI_GAME_SOUNDSET");
-                    });
-                    if (_countdown == 0)
-                    {
-                        StartRace();
-                    }
-                    Thread.Sleep(1000);
-                }
-            });
-        }
-
-        private void SaveVehicle()
-        {
-            _vehicle = Game.Player.Character.CurrentVehicle;
-            if (_vehicle == null)
+                ctx.Client.SendChatMessage("No map with that name exists");
                 return;
-
-            _vehicleHash = _vehicle.Model.Hash;
-            byte primaryColor = 0;
-            byte secondaryColor = 0;
-            unsafe
-            {
-                Function.Call<byte>(Hash.GET_VEHICLE_COLOURS, _vehicle, &primaryColor, &secondaryColor);
             }
-            _primaryColor = primaryColor;
-            _secondaryColor = secondaryColor;
+
+            Session.Votes.Add(ctx.Client, voted.Name);
+            API.SendChatMessage($"{ctx.Client.Username} voted for {voted.Name}");
         }
 
-        private void Checkpoints(CustomEventReceivedArgs obj)
+        [Command("join")]
+        public void Join(CommandContext ctx)
         {
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-            QueueAction(() =>
+            if (Session.State == State.Started && !Session.Players.Any(x => x.Client == ctx.Client))
+                Join(ctx.Client, Random.Next(Session.Map.SpawnPoints.Length));
+        }
+
+        [Command("leave")]
+        public void Leave(CommandContext ctx)
+        {
+            if (Session.State == State.Started)
+                Leave(ctx.Client, false);
+        }
+
+        private string[] GetMaps()
+        {
+            var folder = Path.Combine(AppContext.BaseDirectory, CurrentResource.DataFolder, "Maps");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            return Directory.GetFiles(folder, "*.xml");
+        }
+
+        private static string GetRandomMap()
+        {
+            return Maps[Random.Next(Maps.Count)].Name;
+        }
+
+        private static void SaveTime(string race, string player, long time,bool win)
+        {
+            Records.Insert(new Record()
             {
-                SaveVehicle();
-                if (_vehicle == null && sw.ElapsedMilliseconds < 10000)
-                {
-                    return false;
-                }
-                else
-                {
-                    _vehicle.PlaceOnGround();
-                    sw.Stop();
-                    return true;
-                }
-            });
-            _checkpoints.Clear();
-            _lastCheckPoint = null;
-            foreach (var item in obj.Args)
-                _checkpoints.Add((Vector3)item);
-            QueueAction(ClearBlips);
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-            QueueAction(() =>
-            {
-                if (sw2.ElapsedMilliseconds < 10000)
-                {
-                    Screen.ShowHelpTextThisFrame("Press ~INPUT_VEH_CIN_CAM~ to reset your vehicle");
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                Race = race,
+                Player = player,
+                Time = time,
+                Win = win
             });
         }
 
-        private void StartRace()
+        private static Record GetRecord(string race)
         {
-            QueueAction(() => { _lastCheckPoint = _vehicle?.Position; });
-            _raceStart = _seconds;
-            _isInRace = true;
+            return Records.Query().Where(x => x.Race == race).OrderBy(x => x.Time).Limit(1).FirstOrDefault();
         }
 
-        private void JoinRace(CustomEventReceivedArgs obj)
+        private static int Wins(string player)
         {
-            QueueAction(SaveVehicle);
-            StartRace();
-        }
-
-        private void LeaveRace(CustomEventReceivedArgs obj)
-        {
-            _checkpoints.Clear();
-            QueueAction(ClearBlips);
-            _isInRace = false;
-        }
-
-        private void ClearBlips()
-        {
-            _nextBlip?.Delete();
-            _secondBlip?.Delete();
-            _nextBlip = null;
-            _secondBlip = null;
-        }
-
-        void Cleanup()
-        {
-            _checkpoints.Clear();
-            ClearBlips();
-        }
-
-        public string FormatTime(uint seconds)
-        {
-            var minutes = Convert.ToInt32(Math.Floor(seconds / 60f));
-            var secs = seconds % 60;
-            return string.Format("{0:00}:{1:00}", minutes, secs);
-        }
-
-        public static SizeF ResolutionMaintainRatio
-        {
-            get
-            {
-                // Get the game width and height
-                int screenw = Screen.Resolution.Width;
-                int screenh = Screen.Resolution.Height;
-                // Calculate the ratio
-                float ratio = (float)screenw / screenh;
-                // And the width with that ratio
-                float width = 1080f * ratio;
-                // Finally, return a SizeF
-                return new SizeF(width, 1080f);
-            }
-        }
-
-        public static Point SafezoneBounds
-        {
-            get
-            {
-                // Get the size of the safezone as a float
-                float t = Function.Call<float>(Hash.GET_SAFE_ZONE_SIZE);
-                // Round the value with a max of 2 decimal places and do some calculations
-                double g = Math.Round(Convert.ToDouble(t), 2);
-                g = (g * 100) - 90;
-                g = 10 - g;
-
-                // Then, get the screen resolution
-                int screenw = Screen.Resolution.Width;
-                int screenh = Screen.Resolution.Height;
-                // Calculate the ratio
-                float ratio = (float)screenw / screenh;
-                // And this thing (that I don't know what it does)
-                float wmp = ratio * 5.4f;
-
-                // Finally, return a new point with the correct resolution
-                return new Point((int)Math.Round(g * wmp), (int)Math.Round(g * 5.4f));
-            }
-        }
-    }
-
-    public class Settings
-    {
-        public bool LoadMPMaps { get; set; } = true;
-
-        public static Settings ReadSettings(string path)
-        {
-            Settings settings;
-            try
-            {
-                settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(path));
-            }
-            catch
-            {
-                settings = new();
-                File.WriteAllText(path, JsonConvert.SerializeObject(settings));
-            }
-            return settings;
+            return Records.Query().Where(x => x.Player.ToLower() == player.ToLower() && x.Win).Count();
         }
     }
 }

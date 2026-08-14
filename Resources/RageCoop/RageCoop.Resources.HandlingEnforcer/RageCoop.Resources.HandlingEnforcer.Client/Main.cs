@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using RageCoop.Client.Scripting;
 using System.Collections.Generic;
 using System.IO;
-using API = RageCoop.Client.Scripting.APIBridge;
 using GTA;
 
 namespace RageCoop.Resources.HandlingEnforcer.Client
@@ -11,9 +10,16 @@ namespace RageCoop.Resources.HandlingEnforcer.Client
     {
         private readonly Dictionary<int, HandlingData> HandlingDatamn = new Dictionary<int, HandlingData>();
         private readonly Dictionary<GTA.HandlingData, HandlingData> ModifiedHandlings = new Dictionary<GTA.HandlingData, HandlingData>();
+        private bool _loaded = false;
+
         protected override void OnStart()
         {
-            API.RequestSharedFile("handling.json", Load);
+            var path = Path.Combine(CurrentResource.DataFolder, "handling.json");
+            if (File.Exists(path))
+                Load(path);
+            else
+                Logger.Warning("handling.json not found in data folder: " + CurrentResource.DataFolder);
+
             KeyDown += (e) =>
             {
                 if (e.KeyCode == Keys.U)
@@ -28,8 +34,8 @@ namespace RageCoop.Resources.HandlingEnforcer.Client
         {
             if (s == null)
             {
-
                 Logger.Info("null!");
+                return;
             }
             Logger.Info("Reading handling data from " + s);
 
@@ -42,18 +48,16 @@ namespace RageCoop.Resources.HandlingEnforcer.Client
                     Logger.Trace("loaded data:" + data.Hash);
                 }
             }
-            API.Events.OnVehicleSpawned += ApplyHandling;
-            QueueAction(() =>
-            {
-                foreach (var v in GTA.World.GetAllVehicles())
-                {
-                    ApplyHandling(v);
-                }
-            });
+
+            _loaded = true;
         }
-        private void ApplyHandling(object sender, RageCoop.Client.SyncedVehicle e)
+
+        protected override void OnTick()
         {
-            ApplyHandling(e?.MainVehicle);
+            base.OnTick();
+            if (!_loaded) return;
+            foreach (var v in GTA.World.GetAllVehicles())
+                ApplyHandling(v);
         }
 
         private void ApplyHandling(GTA.Vehicle v)
@@ -61,26 +65,20 @@ namespace RageCoop.Resources.HandlingEnforcer.Client
             lock (ModifiedHandlings)
             {
                 if (v == null) { return; }
-                // Logger.Debug("Vehicle spawnd: "+e.MainVehicle.DisplayName.ToUpper());
                 if (HandlingDatamn.TryGetValue(v.Model.Hash, out var data))
                 {
                     var h = v.HandlingData;
                     if (!ModifiedHandlings.ContainsKey(h))
                     {
-                        // Logger.Debug("Applying handling data to: "+v.DisplayName+" hash:"+data.Hash);
-
-                        // Copy and store unmodified handling data
                         ModifiedHandlings.Add(h, new HandlingData(h, v.Model.Hash));
                         Logger.Trace(JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented));
                         Logger.Trace(JsonConvert.SerializeObject(new HandlingData(h, v.Model.Hash), Newtonsoft.Json.Formatting.Indented));
-
                         data.ApplyTo(h);
                     }
-
                 }
-
             }
         }
+
         public static void ExportAll(string path = "handling.json")
         {
             using (var w = new StreamWriter(path))
@@ -91,9 +89,9 @@ namespace RageCoop.Resources.HandlingEnforcer.Client
                 }
             }
         }
+
         protected override void OnAborted(GTA.AbortedEventArgs args)
         {
-            // Restore modified handling data
             foreach (var p in ModifiedHandlings)
             {
                 p.Value.ApplyTo(p.Key);

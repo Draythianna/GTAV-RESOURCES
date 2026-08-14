@@ -1467,6 +1467,12 @@
                 A json object representing a server's information as annouced to master server.
             </summary>
         </member>
+        <member name="P:RageCoop.Core.ServerInfo.announcedAddress">
+            <summary>
+            Optional override for the address shown in the server list (e.g. a No-IP hostname).
+            If set, this is used instead of the real public IP detected by the master server.
+            </summary>
+        </member>
         <member name="P:RageCoop.Core.Packets.HolePunch.Status">
             <summary>
                 1:initial, 2:acknowledged, 3:confirmed

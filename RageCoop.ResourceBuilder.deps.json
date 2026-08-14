@@ -12,10 +12,9 @@
           "Newtonsoft.Json": "13.0.1",
           "SharpZipLib": "1.3.3",
           "LemonUI.SHVDNC": "2.2.0.0",
-          "Lidgren.Network": "2012.1.7.0",
           "RageCoop.Client.Scripting": "1.0.0.0",
           "RageCoop.Core": "0.1.0.0",
-          "ScriptHookVDotNetCore": "1.2.1.0"
+          "RageCoop.Server": "1.6.0.58"
         },
         "runtime": {
           "RageCoop.ResourceBuilder.dll": {}
@@ -75,14 +74,6 @@
           }
         }
       },
-      "Lidgren.Network/2012.1.7.0": {
-        "runtime": {
-          "Lidgren.Network.dll": {
-            "assemblyVersion": "2012.1.7.0",
-            "fileVersion": "2012.1.7.0"
-          }
-        }
-      },
       "RageCoop.Client.Scripting/1.0.0.0": {
         "runtime": {
           "RageCoop.Client.Scripting.dll": {
@@ -99,11 +90,11 @@
           }
         }
       },
-      "ScriptHookVDotNetCore/1.2.1.0": {
+      "RageCoop.Server/1.6.0.58": {
         "runtime": {
-          "ScriptHookVDotNetCore.dll": {
-            "assemblyVersion": "1.2.1.0",
-            "fileVersion": "1.2.1.0"
+          "RageCoop.Server.dll": {
+            "assemblyVersion": "1.6.0.58",
+            "fileVersion": "1.6.0.58"
           }
         }
       }
@@ -155,11 +146,6 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Lidgren.Network/2012.1.7.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
     "RageCoop.Client.Scripting/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -170,7 +156,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "ScriptHookVDotNetCore/1.2.1.0": {
+    "RageCoop.Server/1.6.0.58": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

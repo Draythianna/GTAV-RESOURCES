@@ -399,7 +399,7 @@ namespace RageCoop.Resources.Race
 
     public class Settings
     {
-        public bool LoadMPMaps { get; set; } = false;
+        public bool LoadMPMaps { get; set; } = true;
 
         public static Settings ReadSettings(string path)
         {

@@ -1,13 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-	  <OutDir>..\..\..\..\..\RageCoop-V\bin\Debug\Server\Resources\Client\RageCoop.Resources.HandlingEnforcer.Client</OutDir>
-
+          <OutDir>..\..\..\..\..\RageCoop-V\bin\Debug\Server\Resources\Client\RageCoop.Resources.HandlingEnforcer.Client</OutDir>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="RageCoop.Client">
+      <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Client\Scripts\RageCoop.Client.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="..\..\..\..\Props\Client.props" />
 </Project>
