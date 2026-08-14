@@ -17,10 +17,13 @@ namespace RageCoop.Resources.Race.Objects
     {
         [XmlArrayItem(ElementName = "Vector3")]
         public RaceVector3[] Checkpoints;
+        [XmlArrayItem(ElementName = "SpawnPoint")]
         public SpawnPoint[] SpawnPoints;
+        [XmlArrayItem(ElementName = "VehicleHash")]
         public string[] AvailableVehicles;
         public SavedProp[] DecorativeProps;
         public string Description;
+        [XmlElement(ElementName = "n")]
         public string Name;
         public Map() { }
     }

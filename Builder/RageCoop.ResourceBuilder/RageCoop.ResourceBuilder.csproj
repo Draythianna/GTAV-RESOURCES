@@ -1,27 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-	  <OutDir>..\..\</OutDir>
+    <OutDir>..\..\</OutDir>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.3.3" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="RageCoop.Client">
-      <HintPath>..\..\..\RAGECOOP-V-nightly\bin\Release\Client\RageCoop.Client.dll</HintPath>
+      <HintPath>..\..\..\RAGECOOP-V\bin\Release\Client\Scripts\RageCoop.Client.dll</HintPath>
     </Reference>
     <Reference Include="RageCoop.Core">
-      <HintPath>..\..\..\RAGECOOP-V-nightly\bin\Release\Core\RageCoop.Core.dll</HintPath>
+      <HintPath>..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll</HintPath>
     </Reference>
     <Reference Include="RageCoop.Server">
-      <HintPath>..\..\..\RAGECOOP-V-nightly\bin\Release\Server\RageCoop.Server.dll</HintPath>
+      <HintPath>..\..\..\RAGECOOP-V\bin\Release\Server\RageCoop.Server.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>

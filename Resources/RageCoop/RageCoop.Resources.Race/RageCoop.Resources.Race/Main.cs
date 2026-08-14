@@ -159,7 +159,7 @@ namespace RageCoop.Resources.Race
 
                     lock (Session.Players)
                         foreach (var player in Session.Players)
-                            player.Client.Player.LastVehicle.Freeze(false);
+                            player.Vehicle?.Freeze(false);
 
                     Session.State = State.Started;
                     Session.RaceStart = Environment.TickCount64;
@@ -214,13 +214,25 @@ namespace RageCoop.Resources.Race
                 {
                     var cayo = Session.Map.SpawnPoints != null && Session.Map.SpawnPoints.Length > 0 && Session.Map.SpawnPoints[0].Position.ToGTA().DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f;
                     client.SendNativeCall((Hash)0x9A9D1BA639675CF1, "HeistIsland", cayo);
+                    if (Session.Map.AvailableVehicles == null || Session.Map.AvailableVehicles.Length == 0)
+                    {
+                        Logger.Error("[Race.Join] No AvailableVehicles for map: " + Session.Map.Name);
+                        return;
+                    }
+                    if (Session.Map.SpawnPoints == null || Session.Map.SpawnPoints.Length == 0)
+                    {
+                        Logger.Error("[Race.Join] No SpawnPoints for map: " + Session.Map.Name);
+                        return;
+                    }
                     var position = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Position;
                     var heading = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Heading;
                     client.Player.Position = position.ToGTA() + new Vector3(4, 0, 1);
-                    player.VehicleHash = (int)Enum.Parse(typeof(GTA.VehicleHash), Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)]);
+                    player.VehicleHash = (int)(GTA.VehicleHash)Enum.Parse(typeof(GTA.VehicleHash), Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)]);
                     var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, position.ToGTA(), heading);
-                    Thread.Sleep(1000);
+                    player.Vehicle = vehicle;
+                    Thread.Sleep(3000);
                     client.SendNativeCall(Hash.SET_PED_INTO_VEHICLE, client.Player.Handle, vehicle.Handle, -1);
+                    Thread.Sleep(1000);
                     client.SendNativeCall((Hash)0xB96B00E976BE977F, cayo);
                     client.SendCustomEvent(Events.StartCheckpointSequence, Checkpoints.ToArray());
                     if (Session.State == State.Started)

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Reference Include="RageCoop.Core">
-      <HintPath>..\..\..\..\RageCoop.Core.dll</HintPath>
+      <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -874,6 +874,13 @@
             Master server address, mostly doesn't need to be changed.
             </summary>
         </member>
+        <member name="P:RageCoop.Server.Settings.AnnouncedAddress">
+            <summary>
+            Optional address to announce to the master server instead of your real public IP.
+            Useful for hiding your IP behind a No-IP hostname or similar DDNS service.
+            Leave empty to use your real public IP (default behaviour).
+            </summary>
+        </member>
         <member name="P:RageCoop.Server.Settings.LogLevel">
             <summary>
             See <see cref="F:RageCoop.Core.Logger.LogLevel"/>.

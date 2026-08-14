@@ -204,13 +204,20 @@ namespace RageCoop.Resources.Race
                 {
                     var dir = _checkpoints[0] - _lastCheckPoint.Value;
                     var heading = (float)(-Math.Atan2(dir.X, dir.Y) * 180.0 / Math.PI);
-
                     // Stromberg will have some issues event after repair, so just spawn a new vehicle
                     var radio = Game.RadioStation;
                     _vehicle?.Delete();
                     var model = new Model(_vehicleHash);
                     model.Request(1000);
-                    _vehicle=World.CreateVehicle(model, _lastCheckPoint.Value, heading);
+                    var deadline = Environment.TickCount + 5000;
+                    while (!model.IsLoaded && Environment.TickCount < deadline)
+                        Thread.Sleep(100);
+                    if (!model.IsLoaded)
+                    {
+                        Screen.FadeIn(1000);
+                        return false;
+                    }
+                    _vehicle = World.CreateVehicle(model, _lastCheckPoint.Value, heading);
                     model.MarkAsNoLongerNeeded();
                     if (_vehicle == null)
                     {
