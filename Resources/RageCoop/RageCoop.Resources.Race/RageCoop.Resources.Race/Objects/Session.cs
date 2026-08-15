@@ -1,3 +1,4 @@
+using GTA.Math;
 using RageCoop.Server;
 using RageCoop.Server.Scripting;
 
@@ -26,7 +27,7 @@ namespace RageCoop.Resources.Race.Objects
                 {
                     if (x.Client.Player.LastVehicle!=null)
                     {
-                        score-=x.Client.Player.LastVehicle.Position.DistanceTo(checkPoints[x.CheckpointsPassed].ToGTA())*0.000001;
+                        score-=x.Client.Player.LastVehicle.Position.DistanceTo(((RaceVector3)checkPoints[x.CheckpointsPassed]).ToGTA()) *0.000001;
                     }
                     else
                     {

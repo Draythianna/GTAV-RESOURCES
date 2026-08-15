@@ -139,7 +139,7 @@ namespace RageCoop.Resources.Race
 
                 Checkpoints.Clear();
                 foreach (var checkpoint in Session.Map.Checkpoints)
-                    Checkpoints.Add(checkpoint);
+                    Checkpoints.Add(checkpoint.ToGTA());
 
                 int spawnPoint = 0;
                 foreach (var client in API.GetAllClients())
