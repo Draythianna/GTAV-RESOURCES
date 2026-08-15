@@ -20,4 +20,8 @@
       <HintPath>..\..\..\RAGECOOP-V\bin\Release\Server\RageCoop.Server.dll</HintPath>
     </Reference>
   </ItemGroup>
+<Target Name="CopyRuntimeDeps" AfterTargets="Build">
+  <Copy SourceFiles="..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll"
+        DestinationFolder="$(OutDir)" />
+</Target>
 </Project>
