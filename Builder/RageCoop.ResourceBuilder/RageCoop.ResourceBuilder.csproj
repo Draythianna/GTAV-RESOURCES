@@ -34,6 +34,11 @@
 		</Reference>
 	</ItemGroup>
 
+<Target Name="CopyRuntimeDeps" AfterTargets="Build">
+  <Copy SourceFiles="..\..\..\RAGECOOP-V\bin\Release\Core\RageCoop.Core.dll"
+        DestinationFolder="$(OutDir)" />
+</Target>
+
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
 	  <Exec Command="del $(OutDir)*.exe&#xD;&#xA;del $(OutDir)*.dll&#xD;&#xA;del $(OutDir)*.json&#xD;&#xA;del $(OutDir)*.pdb&#xD;&#xA;del $(OutDir)*.xml" />
 	</Target>
