@@ -23,7 +23,6 @@ namespace RageCoop.Resources.Race.Objects
         public string[] AvailableVehicles;
         public SavedProp[] DecorativeProps;
         public string Description;
-        [XmlElement(ElementName = "n")]
         public string Name;
         public Map() { }
     }
