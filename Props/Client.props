@@ -9,7 +9,7 @@
             <Private>false</Private>
         </Reference>
         <Reference Include="RageCoop.Client.Scripting">
-            <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Client\Scripts\RageCoop.Client.Scripting.dll</HintPath>
+            <HintPath>..\..\..\..\..\RAGECOOP-V\bin\Release\Client\CoreScripts\RageCoop\RageCoop.Client.Scripting.dll</HintPath>
             <Private>true</Private>
         </Reference>
         <Reference Include="RageCoop.Core">
