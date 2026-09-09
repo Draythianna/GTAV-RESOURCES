@@ -1,4 +1,5 @@
 using RageCoop.Server;
+using RageCoop.Server.Scripting;
 
 namespace RageCoop.Resources.Race.Objects
 {
@@ -48,6 +49,7 @@ namespace RageCoop.Resources.Race.Objects
         public int VehicleHash;
         public int CheckpointsPassed;
         public ushort Ranking = 1;
+        public ServerVehicle Vehicle;
 
         public Player(Client client)
         {

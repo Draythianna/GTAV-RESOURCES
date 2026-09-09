@@ -29,8 +29,14 @@ namespace RageCoop.Resources.Race.Objects
     {
         [XmlArrayItem(ElementName = "Vector3")]
         public SerializableVector3[] Checkpoints;
+
+        [XmlArrayItem(ElementName = "SpawnPoint")]
         public SpawnPoint[] SpawnPoints;
+
+        [XmlArrayItem(ElementName = "VehicleHash")]
         public VehicleHash[] AvailableVehicles;
+
+        [XmlArrayItem(ElementName = "SavedProp")]
         public SavedProp[] DecorativeProps;
 
         public string Description;

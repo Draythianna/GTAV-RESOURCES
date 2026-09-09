@@ -140,7 +140,7 @@ namespace RageCoop.Resources.Race
 
                 Checkpoints.Clear();
                 foreach (var checkpoint in Session.Map.Checkpoints)
-                    Checkpoints.Add(checkpoint);
+                    Checkpoints.Add((GTA.Math.Vector3)checkpoint);
 
                 int spawnPoint = 0;
                 foreach (var client in API.GetAllClients())
@@ -160,7 +160,7 @@ namespace RageCoop.Resources.Race
 
                     lock (Session.Players)
                         foreach (var player in Session.Players)
-                            player.Client.Player.LastVehicle.Freeze(false);
+                            player.Vehicle?.Freeze(false);
 
                     Session.State = State.Started;
                     Session.RaceStart = Environment.TickCount64;
@@ -220,8 +220,10 @@ namespace RageCoop.Resources.Race
                     client.Player.Position = position + new GTA.Math.Vector3(4, 0, 1);
                     player.VehicleHash = (int)Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)];
                     var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, position, heading);
-                    Thread.Sleep(1000);
+                    player.Vehicle = vehicle;
+                    Thread.Sleep(3000);
                     client.SendNativeCall(Hash.SET_PED_INTO_VEHICLE, client.Player.Handle, vehicle.Handle, -1);
+                    Thread.Sleep(1000);
                     client.SendNativeCall((Hash)0x8AE6B3BB652D5B27, cayo);
                     client.SendCustomEvent(Events.StartCheckpointSequence, Checkpoints.ToArray());
                     if (Session.State == State.Started)
