@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+using System.Xml.Serialization;
+using System.Numerics;
 using GTA.Math;
 using GTA.Native;
 using RageCoop.Server;
@@ -134,7 +135,7 @@ namespace RageCoop.Resources.Race
                 {
                     var p = API.Entities.CreateProp(prop.Hash, prop.Position, prop.Rotation);
                     if (prop.Texture > 0 && prop.Texture < 16)
-                        API.SendNativeCall(null, Hash._SET_OBJECT_TEXTURE_VARIATION, p.Handle, prop.Texture);
+                        API.SendNativeCall(null, Hash.SET_OBJECT_TINT_INDEX, p.Handle, prop.Texture);
                 }
 
                 Checkpoints.Clear();
@@ -212,16 +213,16 @@ namespace RageCoop.Resources.Race
             {
                 try
                 {
-                    var cayo = Session.Map.SpawnPoints[0].Position.DistanceTo2D(new Vector2(4700f, -5145f)) < 2000f;
-                    client.SendNativeCall(Hash._SET_ISLAND_HOPPER_ENABLED, "HeistIsland", cayo);
+                    var cayo = ((GTA.Math.Vector3)Session.Map.SpawnPoints[0].Position).DistanceTo2D(new GTA.Math.Vector2(4700f, -5145f)) < 2000f;
+                    client.SendNativeCall(Hash.SET_ISLAND_ENABLED, "HeistIsland", cayo);
                     var position = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Position;
                     var heading = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Heading;
-                    client.Player.Position = position + new Vector3(4, 0, 1);
+                    client.Player.Position = position + new GTA.Math.Vector3(4, 0, 1);
                     player.VehicleHash = (int)Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)];
                     var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, position, heading);
                     Thread.Sleep(1000);
                     client.SendNativeCall(Hash.SET_PED_INTO_VEHICLE, client.Player.Handle, vehicle.Handle, -1);
-                    client.SendNativeCall(Hash._SET_AI_GLOBAL_PATH_NODES_TYPE, cayo);
+                    client.SendNativeCall((Hash)0x8AE6B3BB652D5B27, cayo);
                     client.SendCustomEvent(Events.StartCheckpointSequence, Checkpoints.ToArray());
                     if (Session.State == State.Started)
                     {

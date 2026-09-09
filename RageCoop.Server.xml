@@ -874,6 +874,12 @@
             Master server address, mostly doesn't need to be changed.
             </summary>
         </member>
+        <member name="P:RageCoop.Server.Settings.AnnouncedAddress">
+            <summary>
+            Override the address announced to the master server, useful when hosting behind a reverse proxy or Cloudflare Tunnel.
+            If empty, the server's public IP will be used.
+            </summary>
+        </member>
         <member name="P:RageCoop.Server.Settings.LogLevel">
             <summary>
             See <see cref="F:RageCoop.Core.Logger.LogLevel"/>.
@@ -932,6 +938,11 @@
         <member name="P:RageCoop.Server.Settings.KickSpamming">
             <summary>
             Kick spamming assholes
+            </summary>
+        </member>
+        <member name="P:RageCoop.Server.Settings.SpamLimit">
+            <summary>
+            Player that spawned entities more than this amount will be kicked if <see cref="P:RageCoop.Server.Settings.KickSpamming"/> is enabled.
             </summary>
         </member>
     </members>

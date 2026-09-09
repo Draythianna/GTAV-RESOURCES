@@ -1,0 +1,160 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "RageCoop.Server/1.0.0": {
+        "dependencies": {
+          "Costura.Fody": "5.7.0",
+          "Microsoft.Extensions.ObjectPool": "7.0.9",
+          "RageCoop.Core": "0.1.0",
+          "SharpZipLib": "1.4.2",
+          "Lidgren.Network": "2012.1.7.0",
+          "McMaster.NETCore.Plugins": "2.0.0.0",
+          "Newtonsoft.Json": "13.0.0.0",
+          "ScriptHookVDotNet3": "3.9.0.0"
+        },
+        "runtime": {
+          "RageCoop.Server.dll": {}
+        }
+      },
+      "Costura.Fody/5.7.0": {
+        "runtime": {
+          "lib/netstandard1.0/Costura.dll": {
+            "assemblyVersion": "5.7.0.0",
+            "fileVersion": "5.7.0.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.ObjectPool/7.0.9": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.ObjectPool.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.923.32110"
+          }
+        }
+      },
+      "SharpZipLib/1.4.2": {
+        "runtime": {
+          "lib/net6.0/ICSharpCode.SharpZipLib.dll": {
+            "assemblyVersion": "1.4.2.13",
+            "fileVersion": "1.4.2.13"
+          }
+        }
+      },
+      "RageCoop.Core/0.1.0": {
+        "dependencies": {
+          "Microsoft.Extensions.ObjectPool": "7.0.9",
+          "SharpZipLib": "1.4.2"
+        },
+        "runtime": {
+          "RageCoop.Core.dll": {
+            "assemblyVersion": "0.1.0.0",
+            "fileVersion": "0.1.0.0"
+          }
+        }
+      },
+      "Lidgren.Network/2012.1.7.0": {
+        "runtime": {
+          "Lidgren.Network.dll": {
+            "assemblyVersion": "2012.1.7.0",
+            "fileVersion": "2012.1.7.0"
+          }
+        }
+      },
+      "McMaster.NETCore.Plugins/2.0.0.0": {
+        "runtime": {
+          "McMaster.NETCore.Plugins.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.0.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.0.0": {
+        "runtime": {
+          "Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.1.25517"
+          }
+        }
+      },
+      "ScriptHookVDotNet3/3.9.0.0": {
+        "runtime": {
+          "ScriptHookVDotNet3.dll": {
+            "assemblyVersion": "3.9.0.0",
+            "fileVersion": "3.9.0.0"
+          }
+        }
+      },
+      "ScriptHookVDotNet/3.9.0.6": {
+        "runtime": {
+          "ScriptHookVDotNet.dll": {
+            "assemblyVersion": "3.9.0.6",
+            "fileVersion": "3.6.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "RageCoop.Server/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Costura.Fody/5.7.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MmL28WOOnJEBWORXj6bfSxfWaZW8gWSXEJTdrjB9AQi4COX6RXr2xdGL9HsxpWwn6f5Io0NmNuwFJe94w1YmQA==",
+      "path": "costura.fody/5.7.0",
+      "hashPath": "costura.fody.5.7.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.ObjectPool/7.0.9": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fFYlvFV8gle6IJ7Z0C3IydLfrzruL82pbBmn7oGsPK0zPtyN4pk2uX242ATOKbodZlRqLMAH6RE5wkRMCbkxug==",
+      "path": "microsoft.extensions.objectpool/7.0.9",
+      "hashPath": "microsoft.extensions.objectpool.7.0.9.nupkg.sha512"
+    },
+    "SharpZipLib/1.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A==",
+      "path": "sharpziplib/1.4.2",
+      "hashPath": "sharpziplib.1.4.2.nupkg.sha512"
+    },
+    "RageCoop.Core/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Lidgren.Network/2012.1.7.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "McMaster.NETCore.Plugins/2.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Newtonsoft.Json/13.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ScriptHookVDotNet3/3.9.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ScriptHookVDotNet/3.9.0.6": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
