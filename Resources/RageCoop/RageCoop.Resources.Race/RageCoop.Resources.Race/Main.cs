@@ -1,5 +1,4 @@
 using System.Xml.Serialization;
-using System.Numerics;
 using GTA.Math;
 using GTA.Native;
 using RageCoop.Server;
@@ -20,6 +19,7 @@ namespace RageCoop.Resources.Race
         private static LiteDatabase DB;
         private static ILiteCollection<Record> Records;
         private Thread RankingThread;
+    private Thread StateThread;
         private static bool Stopping = false; 
 
         public override void OnStart()
@@ -91,6 +91,37 @@ namespace RageCoop.Resources.Race
             });
             RankingThread.Start();
 
+            StateThread = new Thread(() =>
+            {
+                while (!Stopping)
+                {
+                    try
+                    {
+                        if (Session.State == State.Voting && API.GetAllClients().Count > 0)
+                        {
+                            Session.NextEvent = DateTime.Now.AddSeconds(15);
+                            Session.State = State.Preparing;
+                            Session.Votes = new Dictionary<Client, string>();
+                            lock (Session.Players)
+                                foreach (var player in Session.Players)
+                                    player.CheckpointsPassed = 0;
+                            API.SendChatMessage("Starting in 15 seconds, use /vote to vote for a map", null, "Server", false);
+                        }
+
+                        if (Session.State == State.Preparing && DateTime.Now > Session.NextEvent)
+                        {
+                            OnPlayerUpdate(null, null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        CurrentResource.Logger.Error(ex);
+                    }
+                    Thread.Sleep(1000);
+                }
+            });
+            StateThread.Start();
+
             CurrentResource.Logger.Info("Race resource started");
         }
 
@@ -99,22 +130,12 @@ namespace RageCoop.Resources.Race
             Stopping=true;
             DB.Dispose();
             RankingThread.Join();
+            StateThread.Join();
             CurrentResource.Logger.Info($"Race resource stopped");
         }
 
         private void OnPlayerUpdate(object s, Client c)
         {
-            if (Session.State == State.Voting)
-            {
-                Session.NextEvent = DateTime.Now.AddSeconds(15);
-                Session.State = State.Preparing;
-                Session.Votes = new Dictionary<Client, string>();
-                lock (Session.Players)
-                    foreach (var player in Session.Players)
-                        player.CheckpointsPassed = 0;
-                API.SendChatMessage("Starting in 15 seconds, use /vote to vote for a map", null, "Server", false);
-            }
-
             if (Session.State == State.Preparing && DateTime.Now > Session.NextEvent)
             {
                 Session.State = State.Starting;
@@ -217,14 +238,14 @@ namespace RageCoop.Resources.Race
                     client.SendNativeCall(Hash.SET_ISLAND_ENABLED, "HeistIsland", cayo);
                     var position = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Position;
                     var heading = Session.Map.SpawnPoints[spawnPoint % Session.Map.SpawnPoints.Length].Heading;
-                    client.Player.Position = position + new GTA.Math.Vector3(4, 0, 1);
+                    client.Player.Position = (GTA.Math.Vector3)position + new GTA.Math.Vector3(4, 0, 1);
                     player.VehicleHash = (int)Session.Map.AvailableVehicles[Random.Next(Session.Map.AvailableVehicles.Length)];
-                    var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, position, heading);
+                    var vehicle = API.Entities.CreateVehicle(client, player.VehicleHash, (GTA.Math.Vector3)position, heading);
                     player.Vehicle = vehicle;
                     Thread.Sleep(3000);
                     client.SendNativeCall(Hash.SET_PED_INTO_VEHICLE, client.Player.Handle, vehicle.Handle, -1);
                     Thread.Sleep(1000);
-                    client.SendNativeCall((Hash)0x8AE6B3BB652D5B27, cayo);
+                    // client.SendNativeCall((Hash)0x8AE6B3BB652D5B27, cayo); // _SET_AI_GLOBAL_PATH_NODES_TYPE - not available in this build
                     client.SendCustomEvent(Events.StartCheckpointSequence, Checkpoints.ToArray());
                     if (Session.State == State.Started)
                     {
@@ -253,7 +274,7 @@ namespace RageCoop.Resources.Race
             {
                 if (!disconnected)
                 {
-                    player.Client.Player.LastVehicle.Delete();
+                    player.Vehicle?.Delete();
                     client.SendCustomEvent(Events.LeaveRace);
                     API.SendChatMessage($"{client.Username} left the race");
                 }
